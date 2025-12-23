@@ -1,1 +1,23 @@
+# python bytecode files
+__pycache__/
+*.pyc
+
+# python test cache
+.pytest_cache
+
+# virtual environment
+venv/
+
+# Google credentials and tokens
 client_credentials.json
+token.json
+
+# Database and local storage
+sync.db
+
+# any logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
