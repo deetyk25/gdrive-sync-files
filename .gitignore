@@ -13,7 +13,8 @@ client_credentials.json
 token.json
 
 # Database and local storage
-sync.db
+# not made yet
+sync.db 
 
 # any logs
 *.log
