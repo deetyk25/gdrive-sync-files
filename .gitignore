@@ -15,6 +15,9 @@ token.json
 # Database and local storage
 # not made yet
 sync.db 
+*.sqlite
+*.sqlite3
+
 
 # any logs
 *.log
