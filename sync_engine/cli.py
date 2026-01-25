@@ -1,48 +1,57 @@
+import logging
 import argparse
 from persistence.store import SQLiteStore
 from sync_engine.run_jobs import JobRunner
 
+logger = logging.getLogger(__name__)
+
 def main():
-    # sets up argument parser
+    # Sets up logger.info for application entry
+    logging.basicConfig(level=logging.INFO)
+
+    # Sets up argument parser
     parser = argparse.ArgumentParser()
-    # sets up job types
-    # initiate creates and runs a job
-    # status allows viewing in-progress jobs
-    # retry allows resetting failded jobs to pending
+    # Sets up job types
+    # Initiate creates and runs a job
+    # Status allows viewing in-progress jobs
+    # Retry allows resetting failded jobs to pending
     parser.add_argument("command", choices=["initiate", "status", "retry"])
+    # Defines job type as an arg to accept initiate, status, and retry
+    parser.add_argument("--job-type", default="metadata_sync")
     parsed_args = parser.parse_args()
 
-    # connects to SQLite store class
+    # Connects to SQLite store class
     store = SQLiteStore()
 
-    # initiates new job
+    # Initiates new job
     if parsed_args.command == "initiate":
-        # creates new job record
-        # starts job runner and executes
+        # Creates new job record
+        # Starts job runner and executes
         job_id = store.create_job(parsed_args.job_type)
-        print(f"Created job {job_id}. Initiating runner now!")
-        runner = JobRunner(store)
-        runner.run()
+        print(f"Created job: {job_id}. Initiating runner now!")
+        logger.info("Starting runner for job %s", job_id)
+        JobRunner(store).run()
 
-    # checks status of jobs
+    # Checks status of jobs
     elif parsed_args.command == "status":
-        # fetches 25 jobs in progress
+        # Fetches 25 jobs in progress
         jobs = store.fetch_pending_jobs(limit=25)
         print("Jobs in progress: ")
-        # prints each in progress job
+        # Prints each in progress job
         for job in jobs:
             print(job)
 
-    # retrying failed jobs
+    # Retrying failed jobs
     elif parsed_args.command == "retry":
-        # marks retried/failed jobs as pending
-        # resets all jobs with FAILED as pending
-        # resets counter as 0
+        # Marks retried/failed jobs as pending
+        # Resets all jobs with FAILED as pending
+        # Resets counter as 0
         with store._conn() as conn:
             conn.execute(
                 "UPDATE jobs SET status='PENDING', attempts=0 WHERE status IN ('FAILED', 'DEAD')"
             )
         print("All failed/dead jobs reset to PENDING.")
+        logger.info("Resets failed and dead jobs")
 
 if __name__ == "__main__":
     main()
