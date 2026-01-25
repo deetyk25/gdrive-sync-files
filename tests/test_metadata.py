@@ -57,21 +57,22 @@ def test_metadata_sync_resumes_after_failure(tmp_path):
     store = SQLiteStore(db_path=tmp_path / "test.db")
 
     # Defines two file pages
-    page1 = (
-        [{"id": "1", "name": "A", "mimeType": "text/plain", "modifiedTime": "t1"}],
-        "token-1"
-    )
-    page2 = (
-        [{"id": "2", "name": "B", "mimeType": "text/plain", "modifiedTime": "t2"}],
-        None
-    )
+    page1 = [{"id": "1", "name": "A", "mimeType": "text/plain", "modifiedTime": "t1"}]
+    page2 = [{"id": "2", "name": "B", "mimeType": "text/plain", "modifiedTime": "t2"}]
 
     # Defines error client that calls exception to the first call and simulates a crash
     class ErrorClient(FakeGDriveClient):
-        def list_files(self, *args, **kwargs):
-            if self.calls == 1:
+        def __init__(self, pages):
+            super().__init__(pages)
+            self.crashed = False
+
+        def list_files(self, page_size=100, page_token=None):
+            # Fail when fetching the second page
+            if page_token == "1" and not self.crashed:  
+                self.crashed = True
                 raise RuntimeError("Simulated crash")
-            return super().list_files(*args, **kwargs)
+            return super().list_files(page_size=page_size, page_token=page_token)
+
 
     client = ErrorClient([page1, page2])
     engine = MetadataSyncEngine(client, store)
