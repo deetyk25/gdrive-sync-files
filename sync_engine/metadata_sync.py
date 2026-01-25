@@ -27,7 +27,7 @@ class MetadataSyncEngine:
             files, next_page_token = self.client.list_files(page_token=page_token)
             if files:
                 # Save files to local storage
-                self.store.upsert_files(files)
+                self.store.insert_update_files(files)
 
             # Persist checkpoint after writing successfully
             self.store.set_checkpoint(CHECKPOINT_TOKEN, next_page_token)

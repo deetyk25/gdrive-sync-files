@@ -13,10 +13,27 @@ class JobRunner:
     def __init__(self, store: SQLiteStore, poll_interval: int = 2):
         self.store = store
         self.poll_interval = poll_interval
+
+    # Recovers stuck jobs by marking RUNNING jobs as FAILED so they can be retried
+    # Used in the case of crashes
+    def recover_stuck_jobs(self):
+        with self.store._conn() as conn:
+            updated = conn.execute(
+                """
+                UPDATE jobs
+                SET status='FAILED'
+                WHERE status='RUNNING' AND attempts < max_attempts
+                """
+            ).rowcount
+        if updated > 0:
+            logger.info("Recovered %d stuck jobs.", updated)
         
     # Loops to fetch and execute all pending jobs
     # Handles status updates, retries, and failure logs
     def run(self):
+        # Recover jobs from previous crashes
+        self.recover_stuck_jobs()
+
         # Initializes a client and runs metadata sync
         client = GDriveClient()
 
