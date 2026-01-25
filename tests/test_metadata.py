@@ -87,3 +87,4 @@ def test_metadata_sync_resumes_after_failure(tmp_path):
     # Tries fetching from page 1
     engine.sync()
     assert store.get_file_count() == 2
+    

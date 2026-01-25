@@ -1,4 +1,5 @@
 from persistence.store import SQLiteStore
+from sync_engine.run_jobs import JobRunner
 
 def test_job_lifecycle(tmp_path):
     # Tests entire life cycle of job within SQLiteStore from creation to completion
@@ -23,3 +24,17 @@ def test_job_lifecycle(tmp_path):
     # Asserts that pending jobs should be 0
     curr_jobs = sql_store.fetch_pending_jobs(limit=10)
     assert curr_jobs == []
+
+def test_runner_recovers_running_jobs(tmp_path):
+    # Tests successful recovery of running jobs 
+    # Defines new SQLiteStore with temporary database
+    store = SQLiteStore(tmp_path / "test.db")
+
+    job_id = store.create_job("metadata_sync")
+    store.update_job(job_id, "RUNNING", attempts=1)
+
+    runner = JobRunner(store)
+    runner.recover_stuck_jobs()
+
+    jobs = store.fetch_pending_jobs(limit=1)
+    assert jobs[0]["status"] == "FAILED"
