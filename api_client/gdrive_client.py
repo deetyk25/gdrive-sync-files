@@ -5,12 +5,14 @@ from googleapiclient.discovery import build
 SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly']
 
 class GDriveClient:
-    def __init__(self, credentials_file='client_credentials.json', token_file='token.json'):
+    def __init__(self, service=None, credentials_file='client_credentials.json', token_file='token.json'):
         self.credentials_file = credentials_file
         self.token_file = token_file
         self.creds = None
-        self.service = None
-        self.authenticate()
+        self.service = service
+
+        if self.service is None:
+            self.authenticate()
 
     def authenticate(self):
         flow = InstalledAppFlow.from_client_secrets_file(self.credentials_file, SCOPES)
