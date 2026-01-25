@@ -27,6 +27,15 @@ class JobRunner:
             ).rowcount
         if updated > 0:
             logger.info("Recovered %d stuck jobs.", updated)
+        return updated
+    
+    # # Retrieves job by ID
+    # def get_job(self, job_id: int):
+    #     with self._conn() as conn:
+    #         cur = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+    #         row = cur.fetchone()
+    #         return row
+
         
     # Loops to fetch and execute all pending jobs
     # Handles status updates, retries, and failure logs

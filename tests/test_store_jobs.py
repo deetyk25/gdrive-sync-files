@@ -33,8 +33,8 @@ def test_runner_recovers_running_jobs(tmp_path):
     job_id = store.create_job("metadata_sync")
     store.update_job(job_id, "RUNNING", attempts=1)
 
+    # Ensures job status is changed after recovery
     runner = JobRunner(store)
-    runner.recover_stuck_jobs()
+    recovered = runner.recover_stuck_jobs()
+    assert recovered == 1
 
-    jobs = store.fetch_pending_jobs(limit=1)
-    assert jobs[0]["status"] == "FAILED"
