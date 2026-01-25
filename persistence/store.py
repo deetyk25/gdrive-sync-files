@@ -67,7 +67,7 @@ class SQLiteStore:
             )
 
     # Insert or update file metadata in files table.
-    def upsert_files(self, files: Iterable[Dict]):
+    def insert_update_files(self, files: Iterable[Dict]):
         with self._conn() as conn:
             conn.executemany(
                 """
@@ -136,7 +136,7 @@ class SQLiteStore:
                 """
                 SELECT *
                 FROM jobs
-                WHERE status = 'PENDING'
+                WHERE status = 'PENDING' AND attempts < max_attempts
                 ORDER BY created_at
                 LIMIT ?
                 """,
