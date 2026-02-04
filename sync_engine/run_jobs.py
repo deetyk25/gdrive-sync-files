@@ -29,12 +29,12 @@ class JobRunner:
             logger.info("Recovered %d stuck jobs.", updated)
         return updated
     
-    # # Retrieves job by ID
-    # def get_job(self, job_id: int):
-    #     with self._conn() as conn:
-    #         cur = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
-    #         row = cur.fetchone()
-    #         return row
+    # Retrieves job by ID
+    def get_job(self, job_id: int):
+        with self._conn() as conn:
+            cur = conn.execute("SELECT * FROM jobs WHERE id = ?", (job_id,))
+            row = cur.fetchone()
+            return row
 
         
     # Loops to fetch and execute all pending jobs
@@ -53,8 +53,7 @@ class JobRunner:
             # No pending jobs, begin sleep for poll_interval
             if not jobs:
                 logger.info("No pending jobs. Sleeping now.")
-                time.sleep(self.poll_interval)
-                continue
+                return
 
             # Goes through each pending job
             for job in jobs:
@@ -65,7 +64,8 @@ class JobRunner:
                 try:
                     # Marks job as RUNNING
                     # Increases attempts
-                    self.store.update_job(job_id, "RUNNING", attempts + 1)
+                    new_attempts = attempts + 1
+                    self.store.update_job(job_id, "RUNNING", new_attempts)
                     # Executes job type
                     # Not integrated client yet
                     if job["type"] == "metadata_sync":
@@ -76,7 +76,7 @@ class JobRunner:
                         raise ValueError(f"Error: Unknown job type {job['type']}")
 
                     # Marks job as done if successfully done
-                    self.store.update_job(job_id, "DONE", attempts + 1)
+                    self.store.update_job(job_id, "DONE", new_attempts)
                     logger.info("Completed Job: %s", job_id)
 
                 except Exception as e:

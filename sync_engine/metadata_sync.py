@@ -1,16 +1,18 @@
 from typing import Optional
 from api_client.gdrive_client import GDriveClient
 from persistence.store import SQLiteStore
+import logging
 
 # Key used to store the last processed page token
 CHECKPOINT_TOKEN = "drive_metadata_page_token"
+logger = logging.getLogger(__name__)
 
 class MetadataSyncEngine:
     def __init__(
         self,
         client: GDriveClient,
         store: SQLiteStore,
-        page_size: int = 100,
+        page_size: int = 25,
     ):
         self.client = client
         self.store = store
@@ -22,15 +24,31 @@ class MetadataSyncEngine:
         # Load last page token
         page_token: Optional[str] = self.store.get_checkpoint(CHECKPOINT_TOKEN)
 
+        logger.info("Starting metadata sync")
+
+        if page_token:
+            logger.debug("Resuming from checkpoint token (length=%d)", len(page_token))
+
+        pages_processed = 0
+        files_processed = 0
+
         # Fetch files and next page from Drive
         while True:
+            logger.debug("Fetching page (token length=%s)",
+                         len(page_token) if page_token else "none")
+
             files, next_page_token = self.client.list_files(page_token=page_token)
             if files:
                 # Save files to local storage
                 self.store.insert_update_files(files)
+                files_processed += len(files)
+            else:
+                logger.debug("No files returned for this page")
 
             # Persist checkpoint after writing successfully
             self.store.set_checkpoint(CHECKPOINT_TOKEN, next_page_token)
+
+            pages_processed += 1
 
             # Stop iterating if pages run out
             if not next_page_token:
@@ -38,7 +56,14 @@ class MetadataSyncEngine:
 
             # Move on to next page
             page_token = next_page_token
+        
+        logger.info(
+            "Metadata sync complete (pages=%d, files=%d)",
+            pages_processed,
+            files_processed,
+        )
 
     # Clear sync checkpoint to force a full resync.
     def reset(self) -> None:
+        logger.warning("Resetting metadata sync checkpoint")
         self.store.clear_checkpoint(CHECKPOINT_TOKEN)
