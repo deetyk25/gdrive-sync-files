@@ -39,7 +39,9 @@ def main():
             ).fetchone()
 
         if existing:
-            print("A metadata_sync job is already active. Use status to inspect it.")
+            print("A metadata_sync job is already active and pending/running. Use status to inspect it.")
+            print("Starting worker...")
+            JobRunner(store).run()
             return
 
         job_id = store.create_job(parsed_args.job_type)

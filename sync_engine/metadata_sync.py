@@ -22,12 +22,15 @@ class MetadataSyncEngine:
     # Can restart at any time.
     def sync(self) -> None:
         # Load last page token
-        page_token: Optional[str] = self.store.get_checkpoint(CHECKPOINT_TOKEN)
-
-        logger.info("Starting metadata sync")
+        # page_token: Optional[str] = self.store.get_checkpoint(CHECKPOINT_TOKEN)
+        page_token = self.store.get_checkpoint(CHECKPOINT_TOKEN)
 
         if page_token:
-            logger.debug("Resuming from checkpoint token (length=%d)", len(page_token))
+            logger.info(
+                "Resuming metadata sync from last checkpoint token!",
+            )
+        else:
+            logger.info("No checkpoint found, starting from beginning")
 
         pages_processed = 0
         files_processed = 0
@@ -48,6 +51,10 @@ class MetadataSyncEngine:
             # Persist checkpoint after writing successfully
             self.store.set_checkpoint(CHECKPOINT_TOKEN, next_page_token)
 
+            logger.debug(
+                "Checkpoint updated to token: %s",
+                next_page_token[:10] if next_page_token else "END",
+            )
             pages_processed += 1
 
             logger.info(
