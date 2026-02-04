@@ -50,6 +50,12 @@ class MetadataSyncEngine:
 
             pages_processed += 1
 
+            logger.info(
+                "Processed page %d (files so far: %d)",
+                pages_processed,
+                files_processed,
+            )
+
             # Stop iterating if pages run out
             if not next_page_token:
                 break
