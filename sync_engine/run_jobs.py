@@ -78,6 +78,16 @@ class JobRunner:
                     # Marks job as done if successfully done
                     self.store.update_job(job_id, "DONE", new_attempts)
                     logger.info("Completed Job: %s", job_id)
+                    
+                except KeyboardInterrupt:
+                    logger.warning("Job %s interrupted by user (Ctrl+C)", job_id)
+                    self.store.update_job(
+                        job_id,
+                        "FAILED",
+                        new_attempts,
+                        "Interrupted by user"
+                    )
+                    raise
 
                 except Exception as e:
                     # Handles errors during job execution
