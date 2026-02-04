@@ -13,7 +13,7 @@ This is a synchronization service that uses Google Drive file metadata with a lo
 **Running Tests:**  
 From the root directory: PYTHONPATH=. pytest tests/ -v
 
-**How to run a job:**
+**How to run a job:**  
 python -m sync_engine.cli initiate --> makes a new job  
 python -m sync_engine.cli status --> returns the status of the last 25 jobs  
 python -m sync_engine.cli reset --> resets failed or dead jobs to pending   
