@@ -27,6 +27,7 @@ python -m sync_engine.cli initiate --> makes a new job
 python -m sync_engine.cli status --> returns the status of the last 25 jobs  
 python -m sync_engine.cli reset --> resets failed or dead jobs to pending
 python -m sync_engine.cli delete --> deletes pending or failed jobs
+rm sync.db --> restart the application and erase all progress
 
 **Reliability Strategy:**
 
