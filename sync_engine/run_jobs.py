@@ -21,8 +21,10 @@ class JobRunner:
             updated = conn.execute(
                 """
                 UPDATE jobs
-                SET status='FAILED'
-                WHERE status='RUNNING' AND attempts < max_attempts
+                SET status = 'FAILED',
+                    attempts = attempts + 1
+                WHERE status = 'RUNNING'
+                AND attempts < max_attempts
                 """
             ).rowcount
         if updated > 0:

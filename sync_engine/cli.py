@@ -52,26 +52,27 @@ def main():
         # Creates new job record
         # Starts job runner and executes
         
+        
         with store._conn() as conn:
-            existing = conn.execute(
+            pending_jobs = conn.execute(
                 """
-                SELECT id FROM jobs
-                WHERE type = ? AND status IN ('PENDING', 'RUNNING')
-                ORDER BY created_at DESC
-                LIMIT 1
-                """,
-                (parsed_args.job_type,),
-            ).fetchone()
+                SELECT id, type
+                FROM jobs
+                WHERE status = 'PENDING'
+                ORDER BY created_at
+                """
+            ).fetchall()
 
-        if existing:
-            job_id = existing["id"]
-            print(f"Resuming {parsed_args.job_type} job #{job_id}")
-            print("Starting worker...")
-            JobRunner(store).run()
-            return
+        if pending_jobs:
+            print("\nPending jobs (will run sequentially):")
+            for job in pending_jobs:
+                print(f"  Job {job['id']} ({job['type']})")
+        else:
+            print("\nNo pending jobs.")
 
         job_id = store.create_job(parsed_args.job_type)
         print(f"Created job: {job_id}. Initiating runner now!")
+        print("\nStarting runner...")
         JobRunner(store).run()
 
     # Checks status of jobs
@@ -106,9 +107,9 @@ def main():
         # Resets counter as 0
         with store._conn() as conn:
             conn.execute(
-                "UPDATE jobs SET status='PENDING', attempts=0 WHERE status IN ('FAILED', 'DEAD')"
+                "UPDATE jobs SET status='PENDING' WHERE status IN ('FAILED', 'DEAD')"
             )
-        print("All failed/dead jobs reset to PENDING.")
+        print("All failed/dead jobs reset to PENDING. Use initiate to retry these pending jobs!")
         logger.info("Resets failed and dead jobs")
 
     # Deletes running or pending jobs
