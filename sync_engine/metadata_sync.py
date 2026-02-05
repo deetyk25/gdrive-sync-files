@@ -22,7 +22,6 @@ class MetadataSyncEngine:
     # Can restart at any time.
     def sync(self) -> None:
         # Load last page token
-        # page_token: Optional[str] = self.store.get_checkpoint(CHECKPOINT_TOKEN)
         page_token = self.store.get_checkpoint(CHECKPOINT_TOKEN)
 
         if page_token:

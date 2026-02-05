@@ -5,7 +5,26 @@ from sync_engine.run_jobs import JobRunner
 
 logger = logging.getLogger(__name__)
 
+def print_welcome():
+    print("=" * 50)
+    print(" Welcome to my Google Drive synchronization service. ")
+    print("=" * 50)
+    print()
+    print()
+    print("Available commands:")
+    print("  initiate   Start or resume a metadata sync job")
+    print("  status     Show recent jobs and their status")
+    print("  retry      Reset FAILED or DEAD jobs to PENDING")
+    print("  delete     Delete PENDING or RUNNING jobs")
+    print()
+    print("Example usage:")
+    print("  python -m sync_engine.cli initiate")
+    print("  python -m sync_engine.cli status")
+    print()
+
 def main():
+    print_welcome()
+
     # Sets up logger.info for application entry
     logging.basicConfig(level=logging.INFO)
 
@@ -16,10 +35,14 @@ def main():
     # Status allows viewing in-progress jobs
     # Retry allows resetting failded jobs to pending
     # Delete allows deletion of pending or running jobs
-    parser.add_argument("command", choices=["initiate", "status", "retry", "delete"])
+    parser.add_argument("command", nargs="?", choices=["initiate", "status", "retry", "delete"])
     # Defines job type as an arg to accept initiate, status, and retry
     parser.add_argument("--job-type", default="metadata_sync")
     parsed_args = parser.parse_args()
+
+    if parsed_args.command is None:
+    # Just displays menu
+        return
 
     # Connects to SQLite store class
     store = SQLiteStore()
@@ -32,14 +55,17 @@ def main():
         with store._conn() as conn:
             existing = conn.execute(
                 """
-                SELECT 1 FROM jobs
+                SELECT id FROM jobs
                 WHERE type = ? AND status IN ('PENDING', 'RUNNING')
+                ORDER BY created_at DESC
+                LIMIT 1
                 """,
                 (parsed_args.job_type,),
             ).fetchone()
 
         if existing:
-            print("A metadata_sync job is already active and pending/running. Use status to inspect it.")
+            job_id = existing["id"]
+            print(f"Resuming {parsed_args.job_type} job #{job_id}")
             print("Starting worker...")
             JobRunner(store).run()
             return
@@ -98,3 +124,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
