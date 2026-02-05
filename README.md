@@ -14,9 +14,9 @@ This is a synchronization service that uses Google Drive file metadata with a lo
 
 **Dependencies:**  
 Run from root directory:
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
+python -m venv venv  
+source venv/bin/activate  
+pip install -r requirements.txt  
 
 **Running Tests:**  
 From the root directory: PYTHONPATH=. pytest tests/ -v
