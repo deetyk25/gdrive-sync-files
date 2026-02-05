@@ -51,8 +51,7 @@ def main():
     if parsed_args.command == "initiate":
         # Creates new job record
         # Starts job runner and executes
-        
-        
+        # Runs pending first
         with store._conn() as conn:
             pending_jobs = conn.execute(
                 """
